@@ -1,6 +1,6 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/) [![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai)](https://openai.com/)
 
-# FastAPI Supabase SQL Connector
+# FastAPI Database Connector
 
 A versatile FastAPI service that provides SQL query endpoints for Supabase (or any PostgreSQL database). The service offers two connection methods:
 - SQLAlchemy 
