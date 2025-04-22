@@ -39,19 +39,21 @@ if not REX_API_KEY:
     logger.error('REX_API_KEY environment variable is not set')
     raise ValueError('REX_API_KEY environment variable is required')
 
-# 4. Parse DATABASE_URL and resolve IPv4 host
+# 4. Parse DATABASE_URL and resolve IPv4 host (with fallback)
 parsed = urlparse(DATABASE_URL)
 hostname = parsed.hostname
 port = parsed.port or 5432
-infos = socket.getaddrinfo(hostname, port, socket.AF_INET)
-if not infos:
-    raise RuntimeError(f'No IPv4 address found for {hostname}')
-DB_HOST = infos[0][4][0]
+try:
+    infos = socket.getaddrinfo(hostname, port, socket.AF_INET)
+    DB_HOST = infos[0][4][0] if infos else hostname
+except socket.gaierror as err:
+    logger.warning(f"IPv4 resolution failed for {hostname}: {err}, falling back to original host")
+    DB_HOST = hostname
 DB_PORT = port
 DB_NAME = parsed.path.lstrip('/')
 DB_USER = parsed.username
 DB_PASSWORD = parsed.password
-logger.debug(f'Resolved DB_HOST: {DB_HOST}, DB_PORT: {DB_PORT}')
+logger.debug(f"Resolved DB_HOST: {DB_HOST}, DB_PORT: {DB_PORT}")
 
 # 5. Initialize FastAPI and CORS
 app = FastAPI()
