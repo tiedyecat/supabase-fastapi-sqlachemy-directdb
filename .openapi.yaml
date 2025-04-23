@@ -1,0 +1,255 @@
+openapi: 3.1.0
+$schema: "https://spec.openapis.org/oas/3.1/schema/2021-09-28"
+info:
+  title: AdVelocity Supabase Ad Performance API
+  version: 1.0.0
+  description: |-
+    API for executing SQL queries against AdVelocity's Supabase PostgreSQL database.
+    Provides access to tables and views like `meta_ads_monitoring`, `ai_summaries`,
+    various alert views (e.g., `alert_high_cpa`), team views (e.g., `view_derek_j`),
+    and aggregated summary views (e.g., `last_7_day_totals`).
+    Use the `sqlquery` parameter to specify the SQL query. Always URL-encode
+    the query string. Refer to the defined schemas under
+    `/components/schemas` for common data structures.
+servers:
+  - url: https://supabase-fastapi-sqlalchemy-directdb-e35b.onrender.com
+    description: Main API server
+security:
+  - APIKeyAuth: []
+paths:
+  /sqlquery_alchemy:
+    get:
+      summary: Execute SQL Query (SQLAlchemy)
+      operationId: execute_sqlalchemy_query
+      description: |-
+        Execute a PostgreSQL-compliant SQL query using SQLAlchemy.
+        The `sqlquery` parameter **must** be URL-encoded.
+      parameters:
+        - name: sqlquery
+          in: query
+          required: true
+          schema:
+            type: string
+          description: URL-encoded PostgreSQL query string.
+          example: SELECT%20*%20FROM%20meta_ads_monitoring%20WHERE%20date%20%3D%20CURRENT_DATE%20-%20INTERVAL%20'1%20day'%20LIMIT%205
+        - name: api_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Your API key for authentication.
+      responses:
+        '200':
+          description: Successful response containing an array of objects.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetaAdsMonitoring'
+        '401':
+          description: Invalid API key provided.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid API key
+        '422':
+          description: Validation Error (e.g., missing required `sqlquery` or `api_key`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '500':
+          description: Internal Server Error or Database Execution Error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  traceback:
+                    type: string
+                    description: Optional traceback information.
+  /sqlquery_direct:
+    get:
+      summary: Execute SQL Query (psycopg2 Direct)
+      operationId: execute_direct_query
+      description: |-
+        Execute a PostgreSQL-compliant SQL query using a direct psycopg2 connection.
+        The `sqlquery` parameter **must** be URL-encoded.
+      parameters:
+        - name: sqlquery
+          in: query
+          required: true
+          schema:
+            type: string
+          description: URL-encoded PostgreSQL query string.
+          example: SELECT%20*%20FROM%20meta_ads_monitoring%20WHERE%20date%20%3D%20CURRENT_DATE%20-%20INTERVAL%20'1%20day'%20LIMIT%205
+        - name: api_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Your API key for authentication.
+      responses:
+        '200':
+          description: Successful response containing an array of objects.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetaAdsMonitoring'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+components:
+  schemas:
+    MetaAdsMonitoring:
+      title: MetaAdsMonitoring
+      type: object
+      properties:
+        id:
+          type: ["string","null"]
+          format: uuid
+        account_id:
+          type: ["string","null"]
+        business_name:
+          type: ["string","null"]
+        campaign_id:
+          type: ["string","null"]
+        campaign_name:
+          type: ["string","null"]
+        ad_id:
+          type: ["string","null"]
+        ad_name:
+          type: ["string","null"]
+        impressions:
+          type: ["integer","null"]
+          format: int32
+        clicks:
+          type: ["integer","null"]
+          format: int32
+        ctr:
+          type: ["number","null"]
+          format: double
+        spend:
+          type: ["number","null"]
+          format: double
+        daily_budget:
+          type: ["number","null"]
+          format: double
+        cpc:
+          type: ["number","null"]
+          format: double
+        cpm:
+          type: ["number","null"]
+          format: double
+        frequency:
+          type: ["number","null"]
+          format: double
+        conversions:
+          type: ["integer","null"]
+          format: int32
+        cpa:
+          type: ["number","null"]
+          format: double
+        date:
+          type: ["string","null"]
+          format: date
+        created_at:
+          type: ["string","null"]
+          format: date-time
+        flagged:
+          type: ["boolean","null"]
+        flagged_reason:
+          type: ["string","null"]
+        leads:
+          type: ["integer","null"]
+          format: int32
+        purchases:
+          type: ["integer","null"]
+          format: int32
+        ai_summary:
+          type: ["string","null"]
+        preflagged:
+          type: ["boolean","null"]
+        campaign_start_date:
+          type: ["string","null"]
+          format: date
+        campaign_objective:
+          type: ["string","null"]
+        funnel_stage:
+          type: ["string","null"]
+        gender_targeting:
+          type: ["string","null"]
+        age_range_targeting:
+          type: ["string","null"]
+      description: Represents a row from `meta_ads_monitoring`.
+    HTTPValidationError:
+      title: HTTP Validation Error
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+    ValidationError:
+      title: Validation Error
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      properties:
+        loc:
+          type: array
+          items:
+            type: string
+        msg:
+          type: string
+        type:
+          type: string
+  securitySchemes:
+    APIKeyAuth:
+      type: apiKey
+      in: query
+      name: api_key
+      description: API Key required for authentication.
+  responses:
+    UnauthorizedError:
+      description: Invalid API key provided.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Invalid API key
+    ValidationError:
+      description: Validation Error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HTTPValidationError'
+    ServerError:
+      description: Internal Server or Database Execution Error.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              traceback:
+                type: string
+                description: Optional traceback information.
