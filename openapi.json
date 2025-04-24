@@ -1,77 +1,119 @@
 {
-    "openapi": "3.0.2",
-    "info": {
-      "title": "Cricket Database PostgreSQL API",
-      "version": "1.0.0",
-      "description": "API for connecting to a PostgreSQL database using SQLAlchemy or psycopg2. This API allows executing PostgreSQL‑compliant SQL queries based on user questions. Results reflect actual query execution. Do not fabricate data."
-    },
-    "servers": [
-      {
-        "url": "https://supabase-fastapi-sqlachemy-directdb-e35b.onrender.com",
-        "description": "Main API server"
-      }
-    ],
-    "paths": {
-      "/sqlquery_alchemy/": {
-        "get": {
-          "summary": "Execute PostgreSQL Query using SQLAlchemy",
-          "operationId": "execute_sqlalchemy_query",
-          "description": "Execute a PostgreSQL‑compliant SQL query using SQLAlchemy and return the results.",
-          "parameters": [
-            {
-              "name": "sqlquery",
-              "in": "query",
-              "required": true,
-              "schema": { "type": "string", "format": "uri-component" },
-              "description": "SQL query string. URL‑encode special characters."
-            },
-            {
-              "name": "api_key",
-              "in": "query",
-              "required": true,
-              "schema": { "type": "string" },
-              "description": "API key for authentication",
-              "example": "Aria2121%"
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AdVelocity Supabase Ad Performance API",
+    "version": "1.0.0",
+    "description": "API for executing SQL queries against AdVelocity's Supabase PostgreSQL database. Provides access to tables and views like `meta_ads_monitoring`, `ai_summaries`, various alert views (e.g., `alert_high_cpa`), team views (e.g., `view_derek_j`), and aggregated summary views (e.g., `last_7_day_totals`). Use the `sqlquery` parameter to specify the SQL query. Always URL-encode the query string. Refer to the defined schemas under `/components/schemas` for common data structures."
+  },
+  "servers": [
+    {
+      "url": "https://supabase-fastapi-sqlachemy-directdb-e35b.onrender.com",
+      "description": "Main API server"
+    }
+  ],
+  "security": [
+    {
+      "APIKeyAuth": [Aria2121%]
+    }
+  ],
+  "paths": {
+    "/sqlquery_alchemy": {
+      "get": {
+        "summary": "Execute SQL Query (SQLAlchemy)",
+        "operationId": "execute_sqlalchemy_query",
+        "description": "Execute a PostgreSQL-compliant SQL query using SQLAlchemy. The `sqlquery` parameter must be URL-encoded.",
+        "parameters": [
+          {
+            "name": "sqlquery",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "URL-encoded SQL query string.",
+            "example": "SELECT%20*%20FROM%20meta_ads_monitoring%20WHERE%20date%20%3D%20CURRENT_DATE%20-%20INTERVAL%20'1%20day'%20LIMIT%205"
+          },
+          {
+            "name": "api_key",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "API key for authentication (percent-encode `%` as `%25`).",
+            "example": "Aria2121%25"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response containing query results.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MetaAdsMonitoring" }
+                }
+              }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "Successful response",
-              "content": {
-                "application/json": {
-                  "schema": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
+          "422": { "$ref": "#/components/responses/ValidationError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/sqlquery_direct": {
+      "get": {
+        "summary": "Execute SQL Query (psycopg2 Direct)",
+        "operationId": "execute_direct_query",
+        "description": "Execute a PostgreSQL-compliant SQL query using a direct psycopg2 connection. The `sqlquery` parameter must be URL-encoded.",
+        "parameters": [
+          {
+            "name": "sqlquery",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "URL-encoded SQL query string.",
+            "example": "SELECT%20*%20FROM%20meta_ads_monitoring%20WHERE%20date%20%3D%20CURRENT_DATE%20-%20INTERVAL%20'1%20day'%20LIMIT%205"
+          },
+          {
+            "name": "api_key",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "API key for authentication (percent-encode `%` as `%25`).",
+            "example": "Aria2121%25"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response containing query results.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MetaAdsMonitoring" }
                 }
               }
-            },
-            "401": {
-              "description": "Invalid API key",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": { "error": { "type": "string", "example": "Invalid API key" } }
-                  }
-                }
-              }
-            },
-            "422": {
-              "description": "Validation error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
-                }
-              }
-            },
-            "500": {
-              "description": "Database or server error",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "error": { "type": "string" },
-                      "traceback": { "type": "string" }
-                    }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
+          "422": { "$ref": "#/components/responses/ValidationError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root health check",
+        "operationId": "root_get",
+        "description": "Health check endpoint. Returns service status.",
+        "responses": {
+          "200": {
+            "description": "Service status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "message": { "type": "string" }
                   }
                 }
               }
@@ -79,99 +121,145 @@
           }
         }
       },
-      "/sqlquery_direct/": {
-        "get": {
-          "summary": "Execute PostgreSQL Query using psycopg2",
-          "operationId": "execute_direct_query",
-          "description": "Execute the same SQL via a direct psycopg2 connection and return results.",
-          "parameters": [
-            {
-              "name": "sqlquery",
-              "in": "query",
-              "required": true,
-              "schema": { "type": "string", "format": "uri-component" },
-              "description": "SQL query string. URL‑encode special characters."
-            },
-            {
-              "name": "api_key",
-              "in": "query",
-              "required": true,
-              "schema": { "type": "string" },
-              "description": "API key for authentication",
-              "example": "Aria2121%"
+      "head": {
+        "summary": "Root health check (HEAD)",
+        "operationId": "root_head",
+        "description": "Health check endpoint for HEAD requests.",
+        "responses": {
+          "200": { "description": "Empty response" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "MetaAdsMonitoring": {
+        "title": "MetaAdsMonitoring",
+        "description": "Represents a row from the 'meta_ads_monitoring' table/view.",
+        "type": "object",
+        "properties": {
+          "id": { "type": ["string", "null"], "format": "uuid", "description": "Database type: uuid" },
+          "account_id": { "type": ["string", "null"], "description": "Database type: text" },
+          "business_name": { "type": ["string", "null"], "description": "Database type: text" },
+          "campaign_id": { "type": ["string", "null"], "description": "Database type: text" },
+          "campaign_name": { "type": ["string", "null"], "description": "Database type: text" },
+          "ad_id": { "type": ["string", "null"], "description": "Database type: text" },
+          "ad_name": { "type": ["string", "null"], "description": "Database type: text" },
+          "impressions": { "type": ["integer", "null"], "format": "int32", "description": "Database type: integer" },
+          "clicks": { "type": ["integer", "null"], "format": "int32", "description": "Database type: integer" },
+          "ctr": { "type": ["number", "null"], "format": "double", "description": "Database type: double precision" },
+          "spend": { "type": ["number", "null"], "format": "double", "description": "Database type: double precision" },
+          "daily_budget": { "type": ["number", "null"], "format": "double", "description": "Database type: double precision" },
+          "cpc": { "type": ["number", "null"], "format": "double", "description": "Database type: double precision" },
+          "cpm": { "type": ["number", "null"], "format": "double", "description": "Database type: double precision" },
+          "frequency": { "type": ["number", "null"], "format": "double", "description": "Database type: double precision" },
+          "conversions": { "type": ["integer", "null"], "format": "int32", "description": "Database type: integer" },
+          "cpa": { "type": ["number", "null"], "format": "double", "description": "Database type: double precision" },
+          "date": { "type": ["string", "null"], "format": "date", "description": "Database type: date" },
+          "created_at": { "type": ["string", "null"], "format": "date-time", "description": "Database type: timestamp with time zone" },
+          "flagged": { "type": ["boolean", "null"], "description": "Database type: boolean" },
+          "flagged_reason": { "type": ["string", "null"], "description": "Database type: text" },
+          "leads": { "type": ["integer", "null"], "format": "int32", "description": "Database type: integer" },
+          "purchases": { "type": ["integer", "null"], "format": "int32", "description": "Database type: integer" },
+          "ai_summary": { "type": ["string", "null"], "description": "Database type: text" },
+          "preflagged": { "type": ["boolean", "null"], "description": "Database type: boolean" },
+          "campaign_start_date": { "type": ["string", "null"], "format": "date", "description": "Database type: date" },
+          "campaign_objective": { "type": ["string", "null"], "description": "Database type: text" },
+          "funnel_stage": { "type": ["string", "null"], "description": "Database type: text" },
+          "gender_targeting": { "type": ["string", "null"], "description": "Database type: text" },
+          "age_range_targeting": { "type": ["string", "null"], "description": "Database type: text" }
+        }
+      },
+      "AiSummaries": {
+        "title": "AiSummaries",
+        "description": "Represents a row from the 'ai_summaries' table/view.",
+        "type": "object",
+        "properties": {
+          "id": { "type": ["string", "null"], "format": "uuid", "description": "Database type: uuid" },
+          "business_name": { "type": ["string", "null"], "description": "Database type: text" },
+          "date": { "type": ["string", "null"], "format": "date", "description": "Database type: date" },
+          "summary": { "type": ["string", "null"], "description": "Database type: text" },
+          "model": { "type": ["string", "null"], "description": "Database type: text" },
+          "created_at": { "type": ["string", "null"], "format": "date-time", "description": "Database type: timestamp with time zone" }
+        }
+      },
+      "Last7DayTotals": {
+        "title": "Last7DayTotals",
+        "description": "Represents a row from the 'last_7_day_totals' table/view.",
+        "type": "object",
+        "properties": {
+          "business_name": { "type": ["string", "null"], "description": "Database type: text" },
+          "leads": { "type": ["integer", "null"], "format": "int64", "description": "Database type: bigint" },
+          "spend": { "type": ["number", "null"], "format": "double", "description": "Database type: double precision" },
+          "purchases": { "type": ["integer", "null"], "format": "int64", "description": "Database type: bigint" },
+          "avg_cpa": { "type": ["number", "null"], "format": "double", "description": "Database type: double precision" }
+        }
+      },
+      "HTTPValidationError": {
+        "title": "HTTP Validation Error",
+        "description": "Returned when request validation fails.",
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ValidationError" }
+          }
+        }
+      },
+      "ValidationError": {
+        "title": "Validation Error",
+        "description": "Describes a single validation error.",
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "properties": {
+          "loc": { "type": "array", "items": { "type": "string" } },
+          "msg": { "type": "string" },
+          "type": { "type": "string" }
+        }
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "Invalid API key provided.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": { "error": { "type": "string", "example": "Invalid API key" } }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "Successful response",
-              "content": {
-                "application/json": {
-                  "schema": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
-                }
-              }
-            },
-            "401": {
-              "description": "Invalid API key",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": { "error": { "type": "string", "example": "Invalid API key" } }
-                  }
-                }
-              }
-            },
-            "422": {
-              "description": "Validation error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
-                }
-              }
-            },
-            "500": {
-              "description": "Database or server error",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "error": { "type": "string" },
-                      "traceback": { "type": "string" }
-                    }
-                  }
-                }
+          }
+        }
+      },  
+      "ValidationError": {
+        "description": "Validation error for missing or invalid parameters.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "Internal server or database execution error.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "string" },
+                "traceback": { "type": "string", "description": "Optional traceback information." }
               }
             }
           }
         }
       }
     },
-    "components": {
-      "schemas": {
-        "HTTPValidationError": {
-          "title": "HTTP Validation Error",
-          "type": "object",
-          "properties": {
-            "detail": {
-              "title": "Detail",
-              "type": "array",
-              "items": { "$ref": "#/components/schemas/ValidationError" }
-            }
-          }
-        },
-        "ValidationError": {
-          "title": "Validation Error",
-          "type": "object",
-          "required": ["loc", "msg", "type"],
-          "properties": {
-            "loc": { "type": "array", "items": { "type": "string" } },
-            "msg": { "type": "string" },
-            "type": { "type": "string" }
-          }
-        }
+    "securitySchemes": {
+      "APIKeyAuth": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "api_key",
+        "description": "API key to authenticate requests."
       }
     }
   }
-  
-  
+}
